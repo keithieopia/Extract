@@ -11,10 +11,38 @@ else
     do
         if [ -f "$n" ] ; then
             case $(file -b --mime-type "$n") in
-                application/x-bzip2|application/x-gzip|application/x-xz|application/x-tar) 
-                    tar xvf "$n"       ;;
+                application/x-gzip)
+                    if hash pigz 2>/dev/null; then
+                        tar -I pigz -xvf "$n"
+                    else
+                        tar xvf "$n"
+                    fi
+                    ;;
+                application/x-bzip2)
+                    if hash pbzip2 2>/dev/null; then
+                        tar -I pbzip2 -xvf "$n"
+                    elif hash lbzip2 2>/dev/null; then
+                        tar -I lbzip2 -xvf "$n"
+                    else
+                        tar xvf "$n"
+                    fi
+                    ;;
+                application/x-xz)
+                    if hash pxz 2>/dev/null; then
+                        tar -I pxz -xvf "$n"
+                    else
+                        tar xvf "$n"
+                    fi
+                    ;;
                 application/x-lzma)      
-                    unlzma ./"$n"      ;;
+                    if hash plzip 2>/dev/null; then
+                        tar -I plzip -xvf "$n"
+                    else
+                        tar --lzma -xvf ./"$n" ;;
+                    fi
+                    ;;                
+                application/x-tar) 
+                    tar xvf "$n" ;;                    
                 application/x-rar)       
                     unrar x -ad ./"$n" ;;
                 application/zip)       

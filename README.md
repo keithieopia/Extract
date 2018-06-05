@@ -4,9 +4,19 @@ What’s a good way to extract: *.zip, .rar, .bz2, .gz, .tar, .tbz2, .tgz, .Z, .
 
 The goal is to make `extract` able to extract anything you give it. The command `extract` uses the free unpackers to support many older and obscure formats.
 
-## What's different about this version of `extract`?
+## What's different about this version of `extract` compared to others?
 
-### 1. Better archive detection
+### 1. Faster decompression
+If they're installed, `extract` will detect and automatically use parallel / multithreaded compression tools such as: 
+
+    * `pigz`
+    * `pbzip2` or `lbzip2`
+    * `pxz`
+    * `plzip`
+
+This usually reduces the time required to decompress large archives by half, if not more!
+
+### 2. Better archive detection
 Other versions use the archive's extension to figure out how to open it. That usually works until you come across:
     * a `.ZIP` that's really a `.RAR` or `.7z`
     * archives changed to look like images so they can be uploaded to imageboards
@@ -16,7 +26,7 @@ Other versions use the archive's extension to figure out how to open it. That us
 
 This version actually looks at the file's [content](https://en.wikipedia.org/wiki/List_of_file_signatures) to figure out what it is, regardless of it's extension.
 
-### 2. Shell script vs. BASH function
+### 3. Shell script vs. BASH function
 * Easier to update
 * No longer dependant on using BASH as your shell, `extract` now works if the user has Fish or Zsh as their shell
 * Easier to debug, test, and contribute

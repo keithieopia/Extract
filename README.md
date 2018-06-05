@@ -26,7 +26,23 @@ Other versions use the archive's extension to figure out how to open it. That us
 
 This version actually looks at the file's [content](https://en.wikipedia.org/wiki/List_of_file_signatures) to figure out what it is, regardless of it's extension.
 
-### 3. Better cross-platform support
+### 3. Wider archive support
+	* `.a`: deprecated Unix [archive file](https://en.wikipedia.org/wiki/Ar_%28Unix%29)
+	* `.gif`: extract all the frames from an animated GIF, via ImageMagick (convert)
+	* `.jar`: [Java Archives](https://docs.oracle.com/javase/tutorial/deployment/jar/)
+	* `.lz4`: [LZ4 compression](https://github.com/lz4/lz4)
+    * `.lzo`: Lempel–Ziv–Oberhumer compression, via [lzop](https://www.lzop.org/)
+    * `.rpa`: Ren'Py game archives, via [unrpa](https://github.com/Lattyware/unrpa) or [rpatool](https://github.com/Shizmob/rpatool)
+
+### 4. Better fallbacks
+7-Zip opens practically everything, but `extract` should try to use other programs
+if the user doesn't have it installed. 
+
+Other versions tend to rely heavily on 7-Zip. While it does opens practically 
+everything, `extract` should try to use other programs if the user doesn't have 
+7-zip installed. 
+
+### 4. Better cross-platform support
 
 #### 7-Zip differences
 Package names for 7-Zip vary greatly between operating systems and Linux distributions (e.g.: `7z`, `7za`, and `7zr`), this version of `extract` find which is installed, and if all are available, it intelligently picks the most feature rich version.

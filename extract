@@ -11,14 +11,17 @@ else
     do
         if [ -f "$n" ] ; then
             case $(file -b --mime-type "$n") in
-                application/x-gzip)
+            ## parallel / multi-thread decompressors
+                # .gz
+                application/x-gzip) 
                     if hash pigz 2>/dev/null; then
                         tar -I pigz -xvf "$n"
                     else
                         tar xvf "$n"
                     fi
                     ;;
-                application/x-bzip2)
+                # .bz2
+                application/x-bzip2) 
                     if hash pbzip2 2>/dev/null; then
                         tar -I pbzip2 -xvf "$n"
                     elif hash lbzip2 2>/dev/null; then
@@ -27,29 +30,49 @@ else
                         tar xvf "$n"
                     fi
                     ;;
-                application/x-xz)
+                # .xz
+                application/x-xz) 
                     if hash pxz 2>/dev/null; then
                         tar -I pxz -xvf "$n"
                     else
                         tar xvf "$n"
                     fi
                     ;;
-                application/x-lzma)      
+                # .lzma
+                application/x-lzma) 
                     if hash plzip 2>/dev/null; then
                         tar -I plzip -xvf "$n"
                     else
-                        tar --lzma -xvf ./"$n" ;;
+                        tar --lzma -xvf ./"$n"
                     fi
-                    ;;                
+                    ;;
+            ## generic decompressors
+                # .tar
                 application/x-tar) 
-                    tar xvf "$n" ;;                    
-                application/x-rar)       
+                    tar xvf "$n" ;;
+                # .rar
+                application/x-rar) 
                     unrar x -ad ./"$n" ;;
-                application/zip)       
-                    unzip ./"$n"       ;;
-                application/x-compress)         
-                    uncompress ./"$n"  ;;
-                application/x-7z-compressed|application/x-arj|application/vnd.ms-cab-compressed|application/vnd.debian.binary-package|application/x-iso9660-image|application/x-lzh-compressed|application/x-msi|application/x-rpm|application/x-xar) 
+                # .zip
+                application/zip) 
+                    unzip ./"$n" ;;
+                # .Z
+                application/x-compress) 
+                    uncompress ./"$n" ;;
+                # .jar
+                application/java-archive) 
+                    jar xf ./"$n" ;;
+                # .gif (extract frames from animated gif)
+                image/gif) 
+                    name=$(basename -- "$n")
+                    basename=${FILENAME%.*}
+                    convert -coalesce "$n" "${basename}%05d.gif" ;;
+                # .cpio
+                application/x-cpio) 
+                    cpio -id < ./"$n"  ;;
+            ## multiple decompressors available
+                # .7z, .iso, .udf
+                application/x-7z-compressed|application/x-iso9660-image) 
                     # most distros have several packages for p7zip: a lightweight version, 
                     # a full version, and a wrapper around the previous two. This will try
                     # each of those in that order.
@@ -65,18 +88,151 @@ else
                         exit 1
                     fi
                     ;;
-                application/x-dosexec)       
-                    cabextract ./"$n"  ;;
-                application/x-cpio)      
-                    cpio -id < ./"$n"  ;;
+                # .arj
+                application/x-arj) 
+                    if hash arj 2>/dev/null; then
+                        arj x ./"$n"
+                    elif hash 7zr 2>/dev/null; then
+                        7zr x ./"$n"
+                    elif hash 7za 2>/dev/null; then
+                        7za x ./"$n"
+                    elif hash 7z 2>/dev/null; then
+                        7z x ./"$n"
+                    else
+                        echo "could not find arj or p7zip!"
+                        exit 1
+                    fi
+                    ;;
+                # .lzh
+                application/x-lzh-compressed) 
+                    if hash lha 2>/dev/null; then
+                        lha x ./"$n"
+                    elif hash 7zr 2>/dev/null; then
+                        7zr x ./"$n"
+                    elif hash 7za 2>/dev/null; then
+                        7za x ./"$n"
+                    elif hash 7z 2>/dev/null; then
+                        7z x ./"$n"
+                    else
+                        echo "could not find lha or p7zip!"
+                        exit 1
+                    fi
+                    ;;
+                # .xar
+                application/x-xar) 
+                    if hash xar 2>/dev/null; then
+                        xar -xf ./"$n"
+                    elif hash 7zr 2>/dev/null; then
+                        7zr x ./"$n"
+                    elif hash 7za 2>/dev/null; then
+                        7za x ./"$n"
+                    elif hash 7z 2>/dev/null; then
+                        7z x ./"$n"
+                    else
+                        echo "could not find xar or p7zip!"
+                        exit 1
+                    fi
+                    ;;   
+            ## Software archives
+                # .cab, .exe, .msi
+                application/vnd.ms-cab-compressed|application/x-dosexec|application/x-msi) 
+                    if hash cabextract 2>/dev/null; then
+                        cabextract ./"$n"  
+                    elif hash 7zr 2>/dev/null; then
+                        7zr x ./"$n"
+                    elif hash 7za 2>/dev/null; then
+                        7za x ./"$n"
+                    elif hash 7z 2>/dev/null; then
+                        7z x ./"$n"
+                    else
+                        echo "could not find cabextract or p7zip!"
+                        exit 1
+                    fi
+                    ;;
+                # .deb
+                application/x-archive|application/vnd.debian.binary-package)
+                    if hash ar 2>/dev/null; then
+                        ar x ./"$n"
+                    elif hash dpkg 2>/dev/null; then
+                        dpkg -x ./"$n"
+                    elif hash 7zr 2>/dev/null; then
+                        7zr x ./"$n"
+                    elif hash 7za 2>/dev/null; then
+                        7za x ./"$n"
+                    elif hash 7z 2>/dev/null; then
+                        7z x ./"$n"
+                    else
+                        echo "could not find ar, dpkg, or p7zip!"
+                        exit 1
+                    fi                
+                    ;;
+                # .rpm
+                application/x-rpm) 
+                    if hash rpm2cpio 2>/dev/null && cpio 2>/dev/null ; then
+                        rpm2cpio ./"$n" | cpio -idmv
+                    elif hash 7zr 2>/dev/null ; then
+                        7zr x ./"$n"
+                    elif hash 7za 2>/dev/null; then
+                        7za x ./"$n"
+                    elif hash 7z 2>/dev/null; then
+                        7z x ./"$n"
+                    else
+                        echo "could not find rpm2cpio and cpio or p7zip!"
+                        exit 1
+                    fi
+                    ;;
+            ## undetected
                 application/octet-stream)
                     # Fallback on file extension 
                     name=$(basename -- "$n")
-                    ext=${FILENAME##*.}
-
-                    case "$ext" in
-                        chm|dmg|wim) 7za x ./"$n" ;;
-                        exe) cabextract ./"$n"   ;; # sometimes shows as octet-stream, otherwise is x-dosexec
+                    ext=${name##*.}
+                    
+                    case "${ext,,}" in
+                        chm)
+                            if hash archmage 2>/dev/null; then
+                                archmage ./"$n" "${name%.*}"
+                            elif hash 7zr 2>/dev/null; then
+                                7zr x ./"$n"
+                            elif hash 7za 2>/dev/null; then
+                                7za x ./"$n"
+                            elif hash 7z 2>/dev/null; then
+                                7z x ./"$n"
+                            else
+                                echo "could not find archmage or p7zip!"
+                                exit 1
+                            fi
+                            ;;
+                        dmg|wim) 
+                            7za x ./"$n" ;;
+                        lz4)
+                            if hash lz4 2>/dev/null; then
+                                lz4 -d ./"$n"
+                            elif hash unlz4 2>/dev/null; then
+                                unlz4 ./"$n"
+                            else
+                                echo "Could not find lz4!"
+                                exit 1
+                            fi
+                            ;;
+                        lzo) 
+                            lzop -d ./"$n" ;;
+                        rpa) 
+                            if hash unrpa 2>/dev/null; then
+                                unrpa ./"$n"
+                            elif hash rpatool 2>/dev/null; then
+                                rpatool -x ./"$n"
+                            else
+                                echo "Could not find unrpa or rpatool!"
+                                echo
+                                echo "unrpa git repo:"
+                                echo "https://github.com/Lattyware/unrpa"
+                                exit 1
+                            fi
+                            ;;
+                        exe) 
+                            # sometimes shows as octet-stream, 
+                            # normally detected as application/x-dosexec
+                            cabextract ./"$n" ;; 
                     esac
                     ;;
                 *)

@@ -49,8 +49,22 @@ else
                     unzip ./"$n"       ;;
                 application/x-compress)         
                     uncompress ./"$n"  ;;
-                application/x-7z-compressed|application/x-arj|application/vnd.ms-cab-compressed|application/vnd.debian.binary-package|application/x-iso9660-image|application/x-lzh-compressed|application/x-msi|application/x-rpm|application/x-xar)
-                    7za x ./"$n"        ;;
+                application/x-7z-compressed|application/x-arj|application/vnd.ms-cab-compressed|application/vnd.debian.binary-package|application/x-iso9660-image|application/x-lzh-compressed|application/x-msi|application/x-rpm|application/x-xar) 
+                    # most distros have several packages for p7zip: a lightweight version, 
+                    # a full version, and a wrapper around the previous two. This will try
+                    # each of those in that order.
+
+                    if hash 7zr 2>/dev/null; then
+                        7zr x ./"$n"
+                    elif hash 7za 2>/dev/null; then
+                        7za x ./"$n"
+                    elif hash 7z 2>/dev/null; then
+                        7z x ./"$n"
+                    else
+                        echo "could not find p7zip!"
+                        exit 1
+                    fi
+                    ;;
                 application/x-dosexec)       
                     cabextract ./"$n"  ;;
                 application/x-cpio)      

@@ -26,11 +26,19 @@ Other versions use the archive's extension to figure out how to open it. That us
 
 This version actually looks at the file's [content](https://en.wikipedia.org/wiki/List_of_file_signatures) to figure out what it is, regardless of it's extension.
 
-### 3. Shell script vs. BASH function
-* Easier to update
-* No longer dependant on using BASH as your shell, `extract` now works if the user has Fish or Zsh as their shell
-* Easier to debug, test, and contribute
-* Easier to install globally for all users
+### 3. Better cross-platform support
+
+#### 7-Zip differences
+Package names for 7-Zip vary greatly between operating systems and Linux distributions (e.g.: `7z`, `7za`, and `7zr`), this version of `extract` find which is installed, and if all are available, it intelligently picks the most feature rich version.
+
+#### Shell Agnostic
+By converting `extract` to a shell script, users can use `extract` with their favorite shell. Previously, `extract` was a BASH function which was not compatible with other shells such as Zsh and Fish.
+
+Furthermore, a single file shell script is:
+
+    * Easier to update (and arguably install)
+    * Easier to debug, test, and contribute
+    * Easier to install globally for all users
 
 
 ## How to install
